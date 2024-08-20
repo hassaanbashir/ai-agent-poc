@@ -1,0 +1,6 @@
+
+/.chainlit
+/.idea
+/.venv
+*.log
+/__pycache__

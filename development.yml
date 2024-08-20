@@ -1,0 +1,5 @@
+sender_email: "admin@oliver.solutions"
+mailgun_api_key : "key-7da9ff8238998d8524545f9ddaa633d5"
+mailgun_user : "api"
+mailgun_host : "https://api.mailgun.net"
+mailgun_domain : "oliver.solutions"
