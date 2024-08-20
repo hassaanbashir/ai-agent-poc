@@ -22,12 +22,17 @@ from llama_index.core.response_synthesizers import TreeSummarize
 # from huggingface_hub import login
 import yaml
 import os
+import streamlit as st
+import random
+import time
 
-os.environ["ANTHROPIC_API_KEY"] = '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'
+os.environ["ANTHROPIC_API_KEY"] = st.secrets["anthropic_api_key"]
+# print (os.environ['ANTHROPIC_API_KEY'])
+# os.environ["ANTHROPIC_API_KEY"] = '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'
 
 # Loading configs from yml file
-with open('./development.yml', 'r') as f:
-    config = yaml.load(f, Loader=yaml.SafeLoader)
+# with open('./development.yml', 'r') as f:
+#     config = yaml.load(f, Loader=yaml.SafeLoader)
 
 
 # HF_TOKEN = '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'
@@ -77,11 +82,11 @@ logger.setLevel(logging.DEBUG)
 # llm = HuggingFaceInferenceAPI(model_name="HuggingFaceH4/zephyr-7b-alpha", api_key=HF_TOKEN)
 # llm = Ollama(model='stablelm-zephyr', request_timeout=300.0)
 # llm = Ollama(model='tinyllama', request_timeout=300.0)
-model_name = 'claude-3-sonnet-20240229'
-# model_name = 'claude-3-opus-20240229'
+# # model_name = 'claude-3-sonnet-20240229'
+model_name = 'claude-3-opus-20240229'
 llm = Anthropic(model=model_name)
 
-# # Setting Ollama llm as llm for llama index 
+# Setting Ollama llm as llm for llama index 
 Settings.llm = llm
 
 
@@ -94,33 +99,34 @@ def textSummarizer (user_input: str) -> str:
     return response
     
 # 2. Email Sending Tool
-def emailSender (summary:str, recipient_name: str, recipient_email: str) -> str:
-    
-    email_text = 'Using Email:  ' + recipient_email + ' to ' + recipient_name
+def emailSender (summary:str, recipient_email: str, recipient_name: str=None) -> str:
+    # if recipient_email == '':
+    #     return "Unable to find any recepient email address" 
     send_email(summary, recipient_name, recipient_email)   
-    return email_text
+    return
 
 
 # MailGun Function to send Email
-def send_email(summary: str, recipient_name: str, recipient_email: str) -> str:
+def send_email(summary: str, recipient_email: str, recipient_name: str=None) -> str:
     # Mailgun API endpoint
-    url = f"https://api.mailgun.net/v3/{config['mailgun_domain']}/messages"
+    url = f"https://api.mailgun.net/v3/oliver.solutions/messages"
     
     # Prepare the email data
     data = {
-        "from": config['sender_email'],
+        "from": "admin@oliver.solutions",
         "to": recipient_email,
-        "subject": "Document Summary for 14th August",
-        "text": f'Hi {recipient_name} \n\n {summary}'
+        "subject": "Document Summary",
+        "text": f'Hi {recipient_name} \n\n {summary} \n\nRegards'
     }
     
     # Send the request to Mailgun
     response = requests.post(
         url,
-        auth=(config['mailgun_user'], config['mailgun_api_key']),
+        auth=(st.secrets['mailgun_user'], st.secrets['mailgun_api_key']),
         data=data
     )
     
+    print(response)
     # Check the response status
     if response.status_code == 200:
         return "Email sent successfully! to " + recipient_email 
@@ -132,10 +138,15 @@ textSummarizerTool = FunctionTool.from_defaults(fn=textSummarizer)
 emailSenderTool = FunctionTool.from_defaults(fn=emailSender)
 
 
+# AI Agent context = """\
+context = """\ You are an AI Agent who has assigned multiple tools one is for summarizing the text for sending it as a formal email and if tool is not working of summarizer provide the best content for email based on the user input by yourself\
+   and other tool is for sending that summarize text as an email to user provided email address\
+"""
 # Initialize Agents
 ai_agent = ReActAgent.from_tools(
     [textSummarizerTool, emailSenderTool],
     llm=llm,
+    # context=context,
     verbose=True
 )
 
@@ -163,12 +174,6 @@ ai_agent = ReActAgent.from_tools(
 #     print(response)
 #     print (message.content)
 #     await cl.Message(content=str(message.content)).send()
-
-
-
-import streamlit as st
-import random
-import time
 
 
 # Streamed response emulator
