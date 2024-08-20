@@ -102,7 +102,7 @@ def textSummarizer (user_input: str) -> str:
 def emailSender (summary:str, recipient_email: str, recipient_name: str=None) -> str:
     # if recipient_email == '':
     #     return "Unable to find any recepient email address" 
-    send_email(summary, recipient_name, recipient_email)   
+    send_email(summary, recipient_email, recipient_name)   
     return
 
 
@@ -111,6 +111,7 @@ def send_email(summary: str, recipient_email: str, recipient_name: str=None) -> 
     # Mailgun API endpoint
     url = f"https://api.mailgun.net/v3/oliver.solutions/messages"
     
+    print(recipient_email)
     # Prepare the email data
     data = {
         "from": "admin@oliver.solutions",
@@ -126,7 +127,7 @@ def send_email(summary: str, recipient_email: str, recipient_name: str=None) -> 
         data=data
     )
     
-    print(response)
+    print(response.text)
     # Check the response status
     if response.status_code == 200:
         return "Email sent successfully! to " + recipient_email 
